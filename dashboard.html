@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=DM+Sans:wght@300;400&family=Dancing+Script:wght@600&display=swap" rel="stylesheet"/>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  :root{
+    --rose:#e8527a;
+    --rose-light:#f9c8d9;
+    --rose-pale:#fff5f8;
+    --rose-deep:#c03060;
+    --cream:#fef9f5;
+    --gold:#d4a96a;
+    --text:#4a1a2c;
+  }
+
+  body{
+    background:var(--cream);
+    color:var(--text);
+    font-family:'DM Sans',sans-serif;
+    overflow:hidden;
+    cursor:none;
+  }
+
+  /* Custom cursor */
+  .cursor{
+    position:fixed;width:12px;height:12px;
+    background:var(--rose);border-radius:50%;
+    pointer-events:none;z-index:99999;
+    transition:transform 0.15s ease;
+    mix-blend-mode:multiply;
+  }
+  .cursor-trail{
+    position:fixed;width:30px;height:30px;
+    border:1.5px solid var(--rose-light);border-radius:50%;
+    pointer-events:none;z-index:99998;
+    transition:all 0.25s ease;
+    mix-blend-mode:multiply;
+  }
+
+  /* Background texture */
+  body::before{
+    content:'';position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse 80% 60% at 20% 10%, rgba(232,82,122,0.08) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 80% at 80% 90%, rgba(212,169,106,0.07) 0%, transparent 60%),
+      radial-gradient(ellipse 50% 50% at 50% 50%, rgba(249,200,217,0.05) 0%, transparent 100%);
+    pointer-events:none;z-index:0;
+  }
+
+  /* Pages */
+  .page{
+    position:fixed;inset:0;
+    display:flex;flex-direction:column;
+    justify-content:center;align-items:center;
+    text-align:center;padding:32px 24px;
+    opacity:0;pointer-events:none;
+    transition:opacity 0.8s cubic-bezier(0.4,0,0.2,1), transform 0.8s cubic-bezier(0.4,0,0.2,1);
+    transform:translateY(24px);
+    z-index:1;
+  }
+  .page.active{opacity:1;pointer-events:auto;transform:translateY(0)}
+
+  /* Decorative corners */
+  .page::before,.page::after{
+    content:'✦';position:absolute;
+    font-size:1rem;color:var(--rose-light);
+    opacity:0.6;
+  }
+  .page::before{top:20px;left:24px}
+  .page::after{bottom:20px;right:24px}
+
+  /* GIF container */
+  .gif-wrap{
+    position:relative;margin-bottom:28px;
+  }
+  .gif-wrap img{
+    width:160px;height:160px;object-fit:cover;
+    border-radius:50%;
+    border:3px solid var(--rose-light);
+    box-shadow:0 0 0 6px rgba(232,82,122,0.08), 0 16px 40px rgba(192,48,96,0.15);
+    animation:floatImg 4s ease-in-out infinite;
+  }
+  .gif-ring{
+    position:absolute;inset:-10px;border-radius:50%;
+    border:1.5px dashed rgba(232,82,122,0.25);
+    animation:spin 20s linear infinite;
+  }
+  .gif-ring::before{
+    content:'✦';position:absolute;top:-4px;left:50%;
+    transform:translateX(-50%);font-size:8px;color:var(--rose);
+  }
+
+  @keyframes floatImg{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+  @keyframes spin{to{transform:rotate(360deg)}}
+
+  /* Typography */
+  h1{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(1.6rem,5vw,2.4rem);
+    font-weight:700;line-height:1.2;
+    color:var(--rose-deep);
+    margin-bottom:12px;letter-spacing:-0.01em;
+  }
+  h1 em{font-style:italic;color:var(--rose)}
+
+  .subtitle{
+    font-size:0.95rem;color:rgba(74,26,44,0.65);
+    line-height:1.6;max-width:340px;
+    font-weight:300;margin-bottom:4px;
+  }
+
+  h2{
+    font-family:'Playfair Display',serif;
+    font-size:clamp(1.3rem,4vw,1.9rem);
+    color:var(--rose-deep);margin-bottom:10px;
+    font-style:italic;
+  }
+
+  /* Button */
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;
+    background:var(--rose);color:#fff;
+    border:none;border-radius:50px;
+    padding:13px 32px;font-size:0.95rem;
+    font-family:'DM Sans',sans-serif;font-weight:400;
+    cursor:none;margin-top:28px;
+    position:relative;overflow:hidden;
+    transition:transform 0.2s ease, box-shadow 0.2s ease;
+    box-shadow:0 4px 20px rgba(232,82,122,0.35);
+    letter-spacing:0.01em;
+  }
+  .btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 60%);
+  }
+  .btn:hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(232,82,122,0.4)}
+  .btn:active{transform:translateY(0)}
+  .btn .arrow{transition:transform 0.2s ease}
+  .btn:hover .arrow{transform:translateX(3px)}
+
+  /* Page 2 envelope */
+  .envelope{
+    font-size:4.5rem;margin-bottom:20px;
+    animation:pulse 2s ease-in-out infinite;
+    filter:drop-shadow(0 8px 16px rgba(232,82,122,0.2));
+  }
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+
+  /* Page 3 letter */
+  #page3{
+    padding:24px 20px 60px;
+    justify-content:flex-start;padding-top:40px;
+    overflow-y:auto;
+  }
+  .letter-wrap{
+    width:100%;max-width:520px;
+    background:#fff;
+    border-radius:20px;
+    padding:28px 28px 28px 32px;
+    box-shadow:0 2px 40px rgba(192,48,96,0.08), 0 0 0 1px rgba(232,82,122,0.08);
+    text-align:left;
+    position:relative;margin-top:8px;
+  }
+  .letter-wrap::before{
+    content:'';position:absolute;left:0;top:20px;bottom:20px;
+    width:3px;background:linear-gradient(to bottom, var(--rose-light), var(--rose), var(--rose-light));
+    border-radius:0 2px 2px 0;
+  }
+  .letter-header{
+    font-family:'Dancing Script',cursive;
+    font-size:1.5rem;color:var(--rose-deep);
+    margin-bottom:16px;
+  }
+  #letterText{
+    font-size:0.9rem;line-height:1.85;
+    color:rgba(74,26,44,0.8);
+    white-space:pre-line;
+    font-weight:300;
+  }
+  .letter-footer{
+    margin-top:20px;padding-top:16px;
+    border-top:1px dashed var(--rose-light);
+    font-family:'Dancing Script',cursive;
+    font-size:1.1rem;color:var(--rose);
+  }
+
+  /* Divider */
+  .divider{
+    display:flex;align-items:center;gap:12px;
+    color:var(--rose-light);font-size:0.8rem;
+    margin:8px 0 20px;
+  }
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--rose-light)}
+
+  /* Falling symbols */
+  .falling{
+    position:fixed;top:-40px;font-size:20px;
+    animation:fall linear forwards;
+    pointer-events:none;z-index:9999;
+  }
+  @keyframes fall{
+    to{transform:translateY(110vh) rotate(360deg);opacity:0}
+  }
+
+  /* Music button */
+  .music-btn{
+    position:fixed;bottom:20px;right:20px;
+    width:44px;height:44px;border-radius:50%;
+    background:#fff;border:1.5px solid var(--rose-light);
+    font-size:18px;cursor:none;z-index:9999;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 4px 16px rgba(192,48,96,0.1);
+    transition:transform 0.2s;
+  }
+  .music-btn:hover{transform:scale(1.05)}
+
+  /* Page indicator */
+  .dots{
+    position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+    display:flex;gap:7px;z-index:9999;
+  }
+  .dot{
+    width:6px;height:6px;border-radius:50%;
+    background:var(--rose-light);transition:all 0.3s;
+  }
+  .dot.on{background:var(--rose);transform:scale(1.3)}
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cur"></div>
+<div class="cursor-trail" id="trail"></div>
+
+<!-- PAGE 1 -->
+<div class="page active" id="page1">
+  <div class="gif-wrap">
+    <div class="gif-ring"></div>
+    <img src="cinamon.gif" alt="cute icon"/>
+  </div>
+  <h1>Happy Birthday<br><em>to Youuu</em> 🎂</h1>
+  <p class="subtitle">aku ada surprise buat kamuu<br>yuk coba dibuka dulu~</p>
+  <button class="btn" onclick="goToPage(2)">tap di sini ♡ <span class="arrow">→</span></button>
+</div>
+
+<!-- PAGE 2 -->
+<div class="page" id="page2">
+  <div class="gif-wrap">
+    <div class="gif-ring"></div>
+    <img src="cikau.gif" alt="cute icon"/>
+  </div>
+  <h2>ada kadooo buat kamuuw~</h2>
+  <p class="subtitle">knock knock....<br> yuk dibuka! ( ∩´͈ ᐜ `͈∩)</p>
+  <button class="btn" onclick="goToPage(3)">buka kadooow nya ♡ <span class="arrow">→</span></button>
+</div>
+
+<!-- PAGE 3 -->
+<div class="page" id="page3">
+  <h2 style="margin-bottom:6px">Birthday Wishes ♡</h2>
+  <p class="subtitle" style="margin-bottom:16px">( ∩´͈ ᐜ `͈∩) .ᐟ</p>
+  <div class="letter-wrap">
+    <div class="letter-header">Happy Birthday to youww !,</div>
+    <div id="letterText"></div>
+    <div class="letter-footer" id="letterSig" style="display:none">♡ ♡ ♡</div>
+  </div>
+</div>
+
+<!-- Music btn -->
+<div class="music-btn" id="musicBtn">🔇</div>
+
+<!-- Page dots -->
+<div class="dots">
+  <div class="dot on" id="d1"></div>
+  <div class="dot" id="d2"></div>
+  <div class="dot" id="d3"></div>
+</div>
+
+<audio id="bgm" src="gluesongs.mp3" loop muted></audio>
+<audio id="sfx" src="https://public.youware.com/users-website-assets/prod/50390417-3924-48fa-b7cc-21adb627e36e/256113_3263906-lq.mp3" preload="auto"></audio>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+const letter = `Hari ini harinya kamu yaa ~ 🥺
+tiup lilinnya jangan lupa sambil make wish yaa 🎂💭
+
+Semoga kamu dikelilingi banyak hal baik, banyak tawa, dan banyak moment kecil yang bikin hati kamu hangat.
+
+Semoga semua yang kamu harapin, pelan-pelan bisa jadi nyata.
+Semoga kamu selalu nemuin alasan buat senyum, bahkan di hari-hari biasa sekalipun.
+
+Kalau lagi capek, semoga kamu selalu punya tempat buat istirahat.
+Kalau lagi sedih, semoga ada hal kecil yang bisa bikin kamu ketawa lagi.
+
+Semoga hari-hari kamu selalu bahagia,
+dan hari sedihmu cuma sebentar ajaaa yaa, karena kamu pantas buat bahagia
+
+Jangan lupa yaa...
+kamu itu berharga, kamu itu spesial, dan dunia ini lebih cerah karena ada kamu ✨
+
+Semoga tahun ini penuh kejutan manis, hal-hal lucu, dan kebahagiaan yang nggak ada habisnya!
+
+once again, happy birthday too youww 💗
+send virtual hug ⊂(｡•́‿•̀｡)⊃`;
+
+const cur = document.getElementById('cur');
+const trail = document.getElementById('trail');
+let mx=0,my=0,tx=0,ty=0;
+document.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  cur.style.left=(mx-6)+'px';cur.style.top=(my-6)+'px';
+});
+setInterval(()=>{
+  tx+=(mx-tx)*0.15;ty+=(my-ty)*0.15;
+  trail.style.left=(tx-15)+'px';trail.style.top=(ty-15)+'px';
+},16);
+
+function playSfx(){
+  const s=document.getElementById('sfx');s.currentTime=0;s.play().catch(()=>{});
+}
+
+function goToPage(n){
+  playSfx();
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page'+n).classList.add('active');
+  ['d1','d2','d3'].forEach((id,i)=>{
+    document.getElementById(id).classList.toggle('on', i===n-1);
+  });
+  if(n===3){
+    const bgm=document.getElementById('bgm');
+    bgm.muted=false;bgm.play().catch(()=>{});
+    document.getElementById('musicBtn').textContent='🔊';
+    isMuted=false;
+    confetti({particleCount:180,spread:110,origin:{y:0.6},colors:['#e8527a','#f9c8d9','#d4a96a','#fde8ef']});
+    typeText(letter,document.getElementById('letterText'),22);
+    startFalling();
+  }
+}
+
+function typeText(text,el,speed){
+  el.innerHTML='';let i=0;
+  const sig=document.getElementById('letterSig');sig.style.display='none';
+  function type(){
+    if(i<text.length){el.innerHTML+=text.charAt(i);i++;setTimeout(type,speed);}
+    else{sig.style.display='block';}
+  }type();
+}
+
+function startFalling(){
+  setInterval(()=>{
+    const el=document.createElement('div');
+    el.className='falling';
+    const list=['💕','⭐','🎂','💗','✦','🌸','✨'];
+    el.innerText=list[Math.floor(Math.random()*list.length)];
+    el.style.left=Math.random()*100+'vw';
+    el.style.animationDuration=(3+Math.random()*3)+'s';
+    el.style.opacity=0.7+Math.random()*0.3;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),7000);
+  },400);
+}
+
+let isMuted=true;
+document.getElementById('musicBtn').addEventListener('click',()=>{
+  playSfx();
+  const bgm=document.getElementById('bgm');
+  isMuted=!isMuted;
+  bgm.muted=isMuted;
+  if(!isMuted)bgm.play().catch(()=>{});
+  document.getElementById('musicBtn').textContent=isMuted?'🔇':'🔊';
+});
+</script>
+</body>
+</html>
